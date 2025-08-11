@@ -3,7 +3,7 @@ import {HttpAdapterHost, NestFactory} from '@nestjs/core';
 import {ValidationPipe} from '@nestjs/common';
 import AllExceptionsFilter from './common/filters/all-exceptions.filter.js';
 import httpConfigFactory, {type HttpConfig} from './www/http.config.js';
-import AtolRpc from 'node-atol-rpc';
+import AtolRpc from '@pbardov/node-atol-rpc';
 
 async function bootstrap() {
 	Error.stackTraceLimit = Number.MAX_SAFE_INTEGER;

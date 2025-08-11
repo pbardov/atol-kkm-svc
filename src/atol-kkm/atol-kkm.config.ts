@@ -1,4 +1,4 @@
-import {Settings} from 'node-atol-rpc';
+import {Settings} from '@pbardov/node-atol-rpc';
 import {IsString} from 'class-validator';
 import {Expose, Type} from 'class-transformer';
 
