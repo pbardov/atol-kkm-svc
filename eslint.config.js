@@ -15,9 +15,15 @@ export default tseslint.config({
 				'fixStyle': 'inline-type-imports'
 			}
 		],
+		'@typescript-eslint/no-restricted-types': 'off',
 		'no-negated-condition': 'off',
 		'new-cap': 'off',
 		'no-await-in-loop': 'off',
 		'capitalized-comments': 'off',
-	}
+	},
+	ignores: [
+		'dist/',
+		'src/migration/*',
+		'local_modules/**/*',
+	]
 })
