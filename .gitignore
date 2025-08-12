@@ -7,3 +7,6 @@
 /*.tsbuildinfo
 /.*.crt
 .env*
+/settings.json
+/settings.yaml
+/fptr10/*

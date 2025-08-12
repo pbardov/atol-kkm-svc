@@ -1,12 +1,12 @@
-import {Settings} from '@pbardov/node-atol-rpc';
-import {IsString} from 'class-validator';
+import registerClassAs from '../common/config/register-class-as.js';
 import {Expose, Type} from 'class-transformer';
+import {IsString} from 'class-validator';
 
-// export default class AtolKkmConfig implements Settings {
-// 	@IsString()
-// 	@Type(() => String)
-// 	@Expose({name: 'KKM_ACCESS_PASSWORD'})
-// 		AccessPassword = '';
-//
-//
-// }
+export class AtolKkmConfig {
+	@IsString()
+	@Type(() => String)
+	@Expose({name: 'KKM_CONFIG'})
+	kkmConfig = 'settings.json'
+}
+
+export default registerClassAs('kkm-config', AtolKkmConfig);
