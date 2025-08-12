@@ -14,7 +14,8 @@ RUN find ./fptr10 -name "libfptr10*.deb" -exec dpkg -i {} \; || true && \
 
 # скопировать package.json, установить зависимости
 COPY package.json yarn.lock ./
-RUN yarn install
+RUN --mount=type=secret,id=npmrc,target=/usr/src/app/.npmrc \
+    yarn install
 
 # скопировать весь контекст, включая .git
 COPY . .
@@ -31,6 +32,7 @@ RUN yarn build
 
 # stage 2: runtime
 FROM node:20 AS runtime
+WORKDIR /usr/src/app
 
 # установка необходимых зависимостей
 RUN apt-get update && apt-get install -y build-essential
@@ -46,9 +48,9 @@ ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
 ENV PATH=$PATH:/home/node/.npm-global/bin
 ENV NODE_ENV=production
 
-WORKDIR /usr/src/app
 COPY package.json yarn.lock ./
-RUN yarn install
+RUN --mount=type=secret,id=npmrc,target=/usr/src/app/.npmrc \
+    yarn install
 COPY --from=builder /usr/src/app/dist .
 
 EXPOSE 8080
