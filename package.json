@@ -8,7 +8,9 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main"
+    "start:prod": "node dist/main",
+    "migration:generate": "typeorm-ts-node-esm migration:generate -d ./src/data-source.ts",
+    "migration:run": "typeorm-ts-node-esm migration:run -d ./src/data-source.ts"
   },
   "repository": "git@repo.vsgsoft.com:atol-kkm",
   "author": "Pavel Bardov <pbardov@gmail.com>",
@@ -44,6 +46,7 @@
     "class-validator": "^0.14.2",
     "dotenv": "^17.2.1",
     "js-yaml": "^4.1.0",
+    "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "typeorm": "^0.3.25"
