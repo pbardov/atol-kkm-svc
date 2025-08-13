@@ -3,10 +3,17 @@ import {IsBoolean, IsOptional, IsString, IsUrl} from 'class-validator';
 import registerClassAs from '../common/config/register-class-as.js';
 
 export class DatabaseConfig {
-	@IsUrl({require_tld: false})
+	@IsUrl({
+		require_tld: false,
+		protocols: ['postgresql'],
+		require_protocol: true,
+		require_port: false,
+		require_host: true,
+		allow_underscores: true
+	})
 	@Type(() => String)
 	@Expose({name: 'PG_URL'})
-	url = 'postgres://localhost:5432/atol';
+	url = 'postgresql://atol:atol@localhost:5432/atol';
 
 	@IsBoolean()
 	@Type(() => Boolean)

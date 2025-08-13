@@ -18,7 +18,7 @@ export default function getDataSourceOptions(config: DatabaseConfig = configFact
 	const {ssl, sslInsecure, caFile, url} = config;
 
 	const dbUrl = new URL(url);
-	if (dbUrl.protocol !== 'postgres:') {
+	if (dbUrl.protocol !== 'postgresql:') {
 		throw new Error(`Unsupported database URL protocol: ${dbUrl.protocol}`);
 	}
 
