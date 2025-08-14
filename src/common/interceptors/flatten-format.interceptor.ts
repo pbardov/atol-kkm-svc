@@ -1,7 +1,8 @@
-import {CallHandler, ExecutionContext, NestInterceptor} from '@nestjs/common';
+import {CallHandler, ExecutionContext, Injectable, NestInterceptor} from '@nestjs/common';
 import {map, Observable} from 'rxjs';
 import {flatten, unflatten} from 'flat';
 
+@Injectable()
 export default class FlattenFormatInterceptor implements NestInterceptor {
 	intercept(context: ExecutionContext, next: CallHandler<any>): Observable<any> | Promise<Observable<any>> {
 		const request = context.switchToHttp().getRequest();
