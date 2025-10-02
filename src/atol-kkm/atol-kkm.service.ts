@@ -58,19 +58,21 @@ export default class AtolKkmService {
 	}
 
 	async fiscalizeReceipt(receiptId: string) {
-		const receipt = await this.receiptRepository.findOneBy({id: receiptId});
-		if (!receipt) {
-			throw new Error(`Чек ID ${receiptId} не найден`);
-		}
+		return await this.receiptRepository.manager.transaction(async transactionalEntityManager => {
+			const receipt = await transactionalEntityManager.findOneBy(this.receiptRepository.target, {id: receiptId});
+			if (!receipt) {
+				throw new Error(`Чек ID ${receiptId} не найден`);
+			}
 
-		if (!receipt.result) {
-			receipt.result = await this.withKkm(async (kkm) => {
-				return kkm[receipt.type](receipt.payload);
-			});
-			await this.receiptRepository.save(receipt);
-		}
+			if (!receipt.result) {
+				receipt.result = await this.withKkm(async (kkm) => {
+					return kkm[receipt.type](receipt.payload);
+				});
+				await transactionalEntityManager.save(receipt);
+			}
 
-		return receipt;
+			return receipt;
+		});
 	}
 
 	async addReceiptItem(receiptId: string, data: Partial<DocumentItem>) {
@@ -79,14 +81,18 @@ export default class AtolKkmService {
 			throw new Error('Неверный DocumentItem', {cause: item});
 		}
 
-		const receipt = await this.receiptRepository.findOneBy({id: receiptId});
-		if (!receipt) {
-			throw new Error(`Чек ID ${receiptId} не найден`);
-		}
+		return await this.receiptRepository.manager.transaction(async transactionalEntityManager => {
+			const receipt = await transactionalEntityManager.findOneBy(this.receiptRepository.target, {id: receiptId});
 
-		receipt.payload.items.push(item);
-		await this.receiptRepository.save(receipt);
-		return item;
+			if (!receipt) {
+				throw new Error(`Чек ID ${receiptId} не найден`);
+			}
+
+			receipt.payload.items.push(item);
+			await transactionalEntityManager.save(receipt);
+
+			return item;
+		});
 	}
 
 	async withKkm<R>(callback: (kkm: AtolRpc) => R | Promise<R>): Promise<R> {

@@ -39,7 +39,7 @@
     "@nestjs/microservices": "^11.1.6",
     "@nestjs/platform-express": "^11.1.6",
     "@nestjs/typeorm": "^11.0.0",
-    "@pbardov/node-atol-rpc": "^1.0.0",
+    "@pbardov/node-atol-rpc": "^1.0.2",
     "axios": "^1.11.0",
     "better-sqlite3": "^12.2.0",
     "class-transformer": "^0.5.1",

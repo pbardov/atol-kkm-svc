@@ -591,10 +591,10 @@
   dependencies:
     consola "^3.2.3"
 
-"@pbardov/node-atol-rpc@^1.0.0":
-  version "1.0.1"
-  resolved "https://npm.pkg.github.com/download/@pbardov/node-atol-rpc/1.0.1/c3c34679f845006bb6e28d1c0ba3ddf1f6c222ed#c3c34679f845006bb6e28d1c0ba3ddf1f6c222ed"
-  integrity sha512-vhLphxi6TRP2WArXTFQOFgEw2wwue8tsTdSCA0kH5DrQT/HYpamIvGmykkY4mVlsV/1WxAGSL+yqx7MC9eqKZg==
+"@pbardov/node-atol-rpc@^1.0.2":
+  version "1.0.2"
+  resolved "https://npm.pkg.github.com/download/@pbardov/node-atol-rpc/1.0.2/fd6d31c87fd697d750e5e051205d65dc0a8fc90d#fd6d31c87fd697d750e5e051205d65dc0a8fc90d"
+  integrity sha512-s+3JWEQDfwpyb1tcA7yjkNvCL+ruN8AYOki3+WTYTx8M4MA+9kPDza5mU0RAFJc3T40i9BXMcKjPB1snXOVU7w==
   dependencies:
     node-atol-wrapper "^0.0.27"
 
