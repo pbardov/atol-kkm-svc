@@ -10,22 +10,15 @@ COPY ./fptr10 ./fptr10
 
 # установить libfptr10 из каталога fptr10 с разрешением зависимостей
 RUN find ./fptr10 -name "libfptr10*.deb" -exec dpkg -i {} \; || true && \
-    apt-get update && apt-get install -f -y
+    apt-get install -f -y
 
 # скопировать package.json, установить зависимости
 COPY package.json yarn.lock ./
 RUN --mount=type=secret,id=npmrc,target=/usr/src/app/.npmrc \
     yarn install
 
-# скопировать весь контекст, включая .git
-COPY . .
-
-# добавить репозиторий в known_hosts, чтобы не было вопросов о подтверждении ключа
-RUN mkdir -p /root/.ssh && \
-    ssh-keyscan github.com >> /root/.ssh/known_hosts
-
-# инициировать сабмодули, передав SSH-ключи через --mount=type=ssh
-RUN --mount=type=ssh git submodule update --init --recursive
+COPY tsconfig.json tsconfig.build.json ./
+COPY src/ ./src
 
 # собрать проект
 RUN yarn build
@@ -42,18 +35,43 @@ COPY ./fptr10 ./fptr10
 
 # установить libfptr10 из каталога fptr10 с разрешением зависимостей
 RUN find ./fptr10 -name "libfptr10*.deb" -exec dpkg -i {} \; || true && \
-    apt-get update && apt-get install -f -y
+    apt-get install -f -y
 
+ARG MODE=production
 ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
-ENV PATH=$PATH:/home/node/.npm-global/bin
-ENV NODE_ENV=production
+ENV PATH=$PATH:./node_modules/.bin:/home/node/.npm-global/bin
 
+# Установить NODE_ENV для установки зависимостей
+ENV NODE_ENV=${MODE}
+
+# установить зависимости
 COPY package.json yarn.lock ./
 RUN --mount=type=secret,id=npmrc,target=/usr/src/app/.npmrc \
     yarn install
-COPY --from=builder /usr/src/app/dist .
+
+# копировать dist из builder stage в текущий этап
+COPY --from=builder /usr/src/app/dist ./dist
+COPY src/ ./src
+COPY tsconfig.json tsconfig.build.json ./build/
+
+# условная логика для перемещения из dist в корневую директорию в production
+RUN if [ "$MODE" = "production" ]; then \
+      cp -r ./dist/* ./; \
+      rm -rf ./src ./dist ./build; \
+      apt-get clean; \
+    else \
+      cp -r ./build/* ./; \
+      chown -R node:node /usr/src/app; \
+      apt-get install -y openssh-server openssh-client rsync; \
+    fi
 
 EXPOSE 8080
-CMD [ "node", "main.js" ]
+CMD if [ "$MODE" = "production" ]; then \
+      node main.js; \
+    else \
+      export NPM_CONFIG_PREFIX=/home/node/.npm-global; \
+      export PATH=$PATH:./node_modules/.bin:/home/node/.npm-global/bin; \
+      bash; \
+    fi
 
 USER node

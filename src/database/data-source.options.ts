@@ -1,4 +1,5 @@
-import fs from 'fs';
+import 'dotenv/config';
+import {readFileSync} from 'node:fs';
 import type {TlsOptions} from 'tls';
 import isString from '../common/types/is-string.js';
 import databaseConfig, {DatabaseConfig} from './database.config.js';
@@ -23,7 +24,7 @@ export default function getDataSourceOptions(config: DatabaseConfig = configFact
 	}
 
 	const tlsOptions = ssl && isString(caFile) ? {
-		ca: fs.readFileSync(caFile),
+		ca: readFileSync(caFile),
 		rejectUnauthorized: !sslInsecure,
 	} satisfies TlsOptions : false;
 

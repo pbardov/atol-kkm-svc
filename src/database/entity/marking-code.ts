@@ -8,7 +8,6 @@ import {
 export default class MarkingCode {
 	@PrimaryColumn({
 		type: 'bytea',
-		length: 32
 	})
 	id: Buffer; // sha256 hash of imc field
 
@@ -56,6 +55,6 @@ export default class MarkingCode {
 	})
 	validationResult: GetMarkingCodeValidationStatusTaskResult | null = null;
 
-	@Column({nullable: true, default: null})
+	@Column({type: 'text', nullable: true, default: null})
 	action: string | null = null;
 }
