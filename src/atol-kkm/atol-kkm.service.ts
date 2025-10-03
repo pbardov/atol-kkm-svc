@@ -1,7 +1,8 @@
-import {Inject, Injectable, Logger} from '@nestjs/common';
+import {Inject, Injectable, Logger, Optional} from '@nestjs/common';
 import {setTimeout as delay} from 'node:timers/promises';
+import {EventEmitter2} from '@nestjs/event-emitter';
 import atolKkmConfig, {AtolKkmConfig} from './atol-kkm.config.js';
-import AtolRpc, {isSettings, Settings} from '@pbardov/node-atol-rpc';
+import AtolRpc, {isSettings} from '@pbardov/node-atol-rpc';
 import {FiscalTask, isFiscalTask} from '@pbardov/node-atol-rpc/dist/types/fiscal.task.js';
 import loadSettingsFile from '../common/util/load-settings-file.js';
 import {DocumentItem, isDocumentItem} from '@pbardov/node-atol-rpc/dist/types/document-item.js';
@@ -14,6 +15,7 @@ import {
 } from '@pbardov/node-atol-rpc/dist/types/get-marking-code-validation-status.task-result.js';
 import MarkingCodeRepository from './marking-code.repository.js';
 import {ValidateMarkAction} from './validate-mark-action.js';
+import MarkingCode from '../database/entity/marking-code.js';
 
 @Injectable()
 export default class AtolKkmService {
@@ -30,6 +32,7 @@ export default class AtolKkmService {
 		@Inject(atolKkmConfig.KEY) config: AtolKkmConfig,
 		private readonly receiptRepository: ReceiptRepository,
 		private readonly markingCodeRepository: MarkingCodeRepository,
+		@Optional() private readonly emitter?: EventEmitter2
 	) {
 		const {kkmConfig, receiptTpl, receiptItemTpl, redisUrl, lockPrefix, markingCodeCheckInterval, markingCodeCheckTimeout} = config;
 
@@ -116,21 +119,34 @@ export default class AtolKkmService {
 		});
 	}
 
-	async validateMark(imcParam: ImcParamsValidation, action: ValidateMarkAction) {
+	async validateMarkBegin(imcParam: ImcParamsValidation) {
+		const repo = this.markingCodeRepository;
+		const mcId = repo.calcId(imcParam.imc);
+		const mc = repo.create({
+			id: mcId,
+			imc: imcParam.imc,
+			imcType: imcParam.imcType,
+			params: imcParam,
+			validationStarted: new Date()
+		});
+		await repo.upsert(mc, ['id']);
+		this.emitter?.emit('validateMark.begin', mc);
+
+		return mc;
+	}
+
+	async validateMark(mc: MarkingCode, action: ValidateMarkAction) {
 		const mutex = new Mutex(this.redisClient, `${this.lockPrefix}validateMark`);
 		await mutex.acquire();
 		try {
 			const repo = this.markingCodeRepository;
-			const mcId = repo.calcId(imcParam.imc);
-			const mcId64 = mcId.toString('base64');
-			const mc = repo.create({id: mcId, imc: imcParam.imc, imcType: imcParam.imcType, validationStarted: new Date()});
-			await repo.upsert(mc, ['id']);
+			const mcId64 = mc.id.toString('base64');
 
 			const duration = (d = new Date()) => d.getTime() - mc.validationStarted.getTime();
 
 			this.logger.log(`Begin marking code validation ${mcId64}`);
 			return await this.withKkm(async kkm => {
-				await kkm.beginMarkingCodeValidation({params: imcParam});
+				await kkm.beginMarkingCodeValidation({params: mc.params});
 				try {
 					let validationResult: GetMarkingCodeValidationStatusTaskResult;
 					do {
@@ -141,11 +157,13 @@ export default class AtolKkmService {
 						mc.isValid = repo.isImcValid(validationResult);
 
 						if (!validationResult.ready) {
-							await delay(this.markingCodeCheckInterval);
-						}
+							if (duration() > this.markingCodeCheckTimeout) {
+								throw new Error(`Marking code validation ${mcId64} timeout`);
+							}
 
-						if (duration() > this.markingCodeCheckTimeout) {
-							throw new Error(`Marking code validation ${mcId64} timeout`);
+							await repo.upsert(mc, ['id']);
+							this.emitter?.emit('validateMark.update', mc);
+							await delay(this.markingCodeCheckInterval);
 						}
 					} while (!validationResult.ready);
 
@@ -159,8 +177,11 @@ export default class AtolKkmService {
 					mc.action = actionTask;
 					mc.validationCompleted = mc.validationCompleted ?? new Date();
 					await repo.upsert(mc, ['id']);
+					this.emitter?.emit('validateMark.complete', mc);
 
-					this.logger.log(`Marking code validation ${mcId64} complete ${JSON.stringify({isReady: mc.isValid, isValid: mc.isValid, actionTask, duration: duration(mc.validationCompleted)})}`);
+					this.logger.log(`Marking code validation ${mcId64} complete ${
+						JSON.stringify({isReady: mc.isValid, isValid: mc.isValid, actionTask, duration: duration(mc.validationCompleted)})
+					}\n${JSON.stringify(mc.validationResult, null, '  ')}`);
 				}
 
 				return mc;
@@ -168,6 +189,10 @@ export default class AtolKkmService {
 		} finally {
 			await mutex.release();
 		}
+	}
+
+	async validateMarkStatus(id: Buffer) {
+		return this.markingCodeRepository.findOneBy({id});
 	}
 
 	async withKkm<R>(callback: (kkm: AtolRpc) => R | Promise<R>): Promise<R> {
