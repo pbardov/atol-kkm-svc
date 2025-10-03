@@ -1,10 +1,19 @@
 import {Inject, Injectable, Logger} from '@nestjs/common';
+import {setTimeout as delay} from 'node:timers/promises';
 import atolKkmConfig, {AtolKkmConfig} from './atol-kkm.config.js';
 import AtolRpc, {isSettings, Settings} from '@pbardov/node-atol-rpc';
 import {FiscalTask, isFiscalTask} from '@pbardov/node-atol-rpc/dist/types/fiscal.task.js';
 import loadSettingsFile from '../common/util/load-settings-file.js';
 import {DocumentItem, isDocumentItem} from '@pbardov/node-atol-rpc/dist/types/document-item.js';
 import ReceiptRepository from './receipt.repository.js';
+import {ImcParamsValidation} from '@pbardov/node-atol-rpc/dist/types/imc-params.js';
+import Redis from 'ioredis';
+import {Mutex} from 'redis-semaphore';
+import {
+	GetMarkingCodeValidationStatusTaskResult
+} from '@pbardov/node-atol-rpc/dist/types/get-marking-code-validation-status.task-result.js';
+import MarkingCodeRepository from './marking-code.repository.js';
+import {ValidateMarkAction} from './validate-mark-action.js';
 
 @Injectable()
 export default class AtolKkmService {
@@ -12,12 +21,17 @@ export default class AtolKkmService {
 	private readonly kkm = new AtolRpc();
 	private readonly receiptTpl: Partial<FiscalTask>;
 	private readonly receiptItemTpl: Partial<DocumentItem>;
+	private readonly redisClient: Redis;
+	private readonly lockPrefix: string;
+	private readonly markingCodeCheckInterval: number;
+	private readonly markingCodeCheckTimeout: number;
 
 	constructor(
 		@Inject(atolKkmConfig.KEY) config: AtolKkmConfig,
-		private readonly receiptRepository: ReceiptRepository
+		private readonly receiptRepository: ReceiptRepository,
+		private readonly markingCodeRepository: MarkingCodeRepository,
 	) {
-		const {kkmConfig, receiptTpl, receiptItemTpl} = config;
+		const {kkmConfig, receiptTpl, receiptItemTpl, redisUrl, lockPrefix, markingCodeCheckInterval, markingCodeCheckTimeout} = config;
 
 		const kkmSettings = loadSettingsFile(kkmConfig);
 		if (!isSettings(kkmSettings)) {
@@ -34,6 +48,13 @@ export default class AtolKkmService {
 		if (receiptItemTpl) {
 			this.receiptItemTpl = loadSettingsFile(receiptItemTpl);
 		}
+
+		this.redisClient = new Redis(redisUrl);
+		Object.assign(this, {
+			lockPrefix,
+			markingCodeCheckInterval,
+			markingCodeCheckTimeout,
+		});
 	}
 
 	async openReceipt(data: Partial<FiscalTask>) {
@@ -93,6 +114,60 @@ export default class AtolKkmService {
 
 			return item;
 		});
+	}
+
+	async validateMark(imcParam: ImcParamsValidation, action: ValidateMarkAction) {
+		const mutex = new Mutex(this.redisClient, `${this.lockPrefix}validateMark`);
+		await mutex.acquire();
+		try {
+			const repo = this.markingCodeRepository;
+			const mcId = repo.calcId(imcParam.imc);
+			const mcId64 = mcId.toString('base64');
+			const mc = repo.create({id: mcId, imc: imcParam.imc, imcType: imcParam.imcType, validationStarted: new Date()});
+			await repo.upsert(mc, ['id']);
+
+			const duration = (d = new Date()) => d.getTime() - mc.validationStarted.getTime();
+
+			this.logger.log(`Begin marking code validation ${mcId64}`);
+			return await this.withKkm(async kkm => {
+				await kkm.beginMarkingCodeValidation({params: imcParam});
+				try {
+					let validationResult: GetMarkingCodeValidationStatusTaskResult;
+					do {
+						validationResult = await kkm.getMarkingCodeValidationStatus();
+						mc.validationCompleted = new Date();
+						mc.validationResult = validationResult;
+						mc.isReady = validationResult.ready;
+						mc.isValid = repo.isImcValid(validationResult);
+
+						if (!validationResult.ready) {
+							await delay(this.markingCodeCheckInterval);
+						}
+
+						if (duration() > this.markingCodeCheckTimeout) {
+							throw new Error(`Marking code validation ${mcId64} timeout`);
+						}
+					} while (!validationResult.ready);
+
+					if (!mc.isReady || !mc.isValid) {
+						throw new Error(`Marking code validation ${mcId64} fail`);
+					}
+				} finally {
+					const actionTask = mc.isReady && mc.isValid ? action.success : action.fail;
+					await kkm.processJsonTask({type: actionTask});
+
+					mc.action = actionTask;
+					mc.validationCompleted = mc.validationCompleted ?? new Date();
+					await repo.upsert(mc, ['id']);
+
+					this.logger.log(`Marking code validation ${mcId64} complete ${JSON.stringify({isReady: mc.isValid, isValid: mc.isValid, actionTask, duration: duration(mc.validationCompleted)})}`);
+				}
+
+				return mc;
+			});
+		} finally {
+			await mutex.release();
+		}
 	}
 
 	async withKkm<R>(callback: (kkm: AtolRpc) => R | Promise<R>): Promise<R> {

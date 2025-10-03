@@ -1,5 +1,5 @@
 import {Repository} from 'typeorm';
-import Receipt from '../database/entity/Receipt.js';
+import Receipt from '../database/entity/receipt.js';
 import {InjectRepository} from '@nestjs/typeorm';
 import {Injectable} from '@nestjs/common';
 
