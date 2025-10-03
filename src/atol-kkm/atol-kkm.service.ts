@@ -135,7 +135,7 @@ export default class AtolKkmService {
 		return mc;
 	}
 
-	async validateMark(mc: MarkingCode, action: ValidateMarkAction) {
+	async validateMark(mc: MarkingCode, action: ValidateMarkAction, timeout = this.markingCodeCheckTimeout) {
 		const mutex = new Mutex(this.redisClient, `${this.lockPrefix}validateMark`);
 		await mutex.acquire();
 		try {
@@ -157,12 +157,13 @@ export default class AtolKkmService {
 						mc.isValid = repo.isImcValid(validationResult);
 
 						if (!validationResult.ready) {
-							if (duration() > this.markingCodeCheckTimeout) {
+							if (duration() > timeout) {
 								throw new Error(`Marking code validation ${mcId64} timeout`);
 							}
 
 							await repo.upsert(mc, ['id']);
 							this.emitter?.emit('validateMark.update', mc);
+
 							await delay(this.markingCodeCheckInterval);
 						}
 					} while (!validationResult.ready);
@@ -191,8 +192,8 @@ export default class AtolKkmService {
 		}
 	}
 
-	async validateMarkStatus(id: Buffer) {
-		return this.markingCodeRepository.findOneBy({id});
+	async validateMarkStatus(id: Buffer | string) {
+		return this.markingCodeRepository.findOneBy({id: Buffer.isBuffer(id) ? id : Buffer.from(id, 'base64')});
 	}
 
 	async withKkm<R>(callback: (kkm: AtolRpc) => R | Promise<R>): Promise<R> {
