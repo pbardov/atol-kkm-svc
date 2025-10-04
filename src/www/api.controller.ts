@@ -16,13 +16,14 @@ import httpConfig, {HttpConfig} from './http.config.js';
 import AtolKkmService from '../atol-kkm/atol-kkm.service.js';
 import {FiscalTask} from '@pbardov/node-atol-rpc/dist/types/fiscal.task.js';
 import {DocumentItem} from '@pbardov/node-atol-rpc/dist/types/document-item.js';
-import {ImcParamsValidation, isImcParamsValidation} from '@pbardov/node-atol-rpc/dist/types/imc-params.js';
 import TypeGuardPipe from '../common/pipes/type-guard.pipe.js';
 import {isValidateMarkParams, ValidateMarkParams} from './validate-mark-params.js';
+import {JsonTaskType} from '@pbardov/node-atol-rpc/dist/types/json-task-type.js';
+import {JsonTaskMap} from '@pbardov/node-atol-rpc/dist/types/json-task.map.js';
 
-@Controller()
+@Controller('/api')
 @UseInterceptors(FlattenFormatInterceptor)
-export default class WwwController {
+export default class ApiController {
 	constructor(
 		public readonly kkmSvc: AtolKkmService,
 		@Inject(httpConfig.KEY) private readonly config: HttpConfig
@@ -31,13 +32,18 @@ export default class WwwController {
 	}
 
 	@Get('/')
-	async main() {
-		const {deviceInfo, deviceStatus} = await this.kkmSvc.withKkm(async (kkm) => {
+	async info() {
+		return this.kkmSvc.withKkm(async (kkm) => {
 			const deviceInfo = await kkm.getDeviceInfo();
 			const deviceStatus = await kkm.getDeviceStatus();
-			return {deviceInfo, deviceStatus};
+			const shiftStatus = await kkm.getShiftStatus();
+			return {deviceInfo, deviceStatus, shiftStatus};
 		});
-		return {deviceInfo, deviceStatus};
+	}
+
+	@Post('/')
+	async kkm<T extends JsonTaskType>(@Body() task: JsonTaskMap[T]) {
+		return this.kkmSvc.withKkm(kkm => kkm.processJsonTask(task));
 	}
 
 	@Post('/receipt')

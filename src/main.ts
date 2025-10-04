@@ -7,10 +7,11 @@ import httpConfigFactory, {type HttpConfig} from './www/http.config.js';
 async function bootstrap() {
 	Error.stackTraceLimit = Number.MAX_SAFE_INTEGER;
 	const app = await NestFactory.create(AppModule);
-	await app.init();
+
 	app.useGlobalPipes(new ValidationPipe());
 	const httpAdapter = app.get(HttpAdapterHost);
 	app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
+	await app.init();
 
 	const httpConfig: HttpConfig = app.get<HttpConfig, HttpConfig>(httpConfigFactory.KEY);
 	await app.listen(httpConfig.httpPort);

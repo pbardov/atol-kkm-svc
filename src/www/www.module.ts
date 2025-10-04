@@ -1,6 +1,6 @@
 import {Module} from '@nestjs/common';
 import AppConfigModule from '../config/app-config.module.js';
-import WwwController from './www.controller.js';
+import ApiController from './api.controller.js';
 import AtolKkmModule from '../atol-kkm/atol-kkm.module.js';
 
 @Module({
@@ -9,7 +9,7 @@ import AtolKkmModule from '../atol-kkm/atol-kkm.module.js';
 		AtolKkmModule,
 	],
 	providers: [],
-	controllers: [WwwController],
+	controllers: [ApiController],
 })
 export default class WwwModule {
 	//
