@@ -27,6 +27,8 @@ services:
       - redis
     ports:
       - "8080:8080"
+    volumes:
+      - ./settings.json:/usr/src/app/settings.json
     environment:
       PG_URL: postgresql://kkm:kkm@db:5432/kkm
       REDIS_URL: redis://redis:6379

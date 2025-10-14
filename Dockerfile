@@ -49,29 +49,13 @@ COPY package.json yarn.lock ./
 RUN --mount=type=secret,id=npmrc,target=/usr/src/app/.npmrc \
     yarn install
 
-# копировать dist из builder stage в текущий этап
-COPY --from=builder /usr/src/app/dist ./dist
-COPY src/ ./src
-COPY tsconfig.json tsconfig.build.json ./build/
+RUN apt-get clean
 
-# условная логика для перемещения из dist в корневую директорию в production
-RUN if [ "$MODE" = "production" ]; then \
-      cp -r ./dist/* ./; \
-      rm -rf ./src ./dist ./build; \
-      apt-get clean; \
-    else \
-      cp -r ./build/* ./; \
-      chown -R node:node /usr/src/app; \
-      apt-get install -y openssh-server openssh-client rsync; \
-    fi
+# копировать dist из builder stage в текущий этап
+COPY --from=builder /usr/src/app/dist ./
+RUN chown -R node:node /usr/src/app
 
 EXPOSE 8080
-CMD if [ "$MODE" = "production" ]; then \
-      node main.js; \
-    else \
-      export NPM_CONFIG_PREFIX=/home/node/.npm-global; \
-      export PATH=$PATH:./node_modules/.bin:/home/node/.npm-global/bin; \
-      bash; \
-    fi
+CMD node main.js
 
 USER node

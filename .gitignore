@@ -11,3 +11,6 @@
 /settings.json
 /settings.yaml
 /fptr10/*
+/test*.yml
+/test*.yaml
+/test*.json

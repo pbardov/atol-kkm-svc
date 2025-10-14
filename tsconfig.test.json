@@ -1,9 +1,14 @@
 {
-	"extends": "./tsconfig.json", // Наследование от основного tsconfig.json
+	"extends": "./tsconfig.json",
 	"compilerOptions": {
-		"rootDir": "./", // Укажите корневую директорию, которая включает ваш код и тесты
+		"rootDir": "./",
 		"outDir": "dist/test",
-		"types": ["jest", "node"] // Подключение типов для Jest и Node
+		"types": ["jest", "node"],
+		"baseUrl": ".",
+		"paths": {
+			"src/*": ["src/*"],
+			"test/*": ["test/*"]
+		}
 	},
 	"include": [
 		"test/**/*.ts",
