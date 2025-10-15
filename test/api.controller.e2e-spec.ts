@@ -1,4 +1,4 @@
-import request from 'supertest';
+import request, {type Response} from 'supertest';
 import {HttpStatus} from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -22,6 +22,15 @@ function loadData(filePath: string): any {
 		: JSON.parse(rawContent);
 }
 
+function expect2xx(res: Response) {
+	if (res.status < 200 || res.status >= 300) {
+		// eslint-disable-next-line no-console
+		console.error('HTTP error:', res.status, res.body ?? res.text);
+	}
+	expect(res.status).toBeGreaterThanOrEqual(200);
+	expect(res.status).toBeLessThan(300);
+}
+
 const config = testConfigFactory();
 
 type Receipt = Partial<FiscalTaskTypes> & {
@@ -43,9 +52,9 @@ describe('ApiController (e2e)', () => {
 		const task = {type: 'getShiftStatus'};
 		const response = await request(config.serviceUrl)
 			.post('/api')
-			.send(task)
-			.expect(HttpStatus.OK);
+			.send(task);
 
+		expect2xx(response);
 		expect(response.body).toBeDefined();
 	});
 
@@ -58,13 +67,14 @@ describe('ApiController (e2e)', () => {
 					fail: config.validateMarkAction,
 				}
 			};
+			console.log(`Validate-mark sync ${inspect(body)}`);
 
 			const response = await request(config.serviceUrl)
 				.post('/api/validate-mark')
-				.query({asyncValidate: false})
-				.send(body)
-				.expect(HttpStatus.OK);
+				.query({async: false})
+				.send(body);
 
+			expect2xx(response);
 			expect(response.body).toBeDefined();
 
             const mc = response.body;
@@ -81,13 +91,14 @@ describe('ApiController (e2e)', () => {
 					fail: config.validateMarkAction,
 				}
 			};
+			console.log(`Validate-mark async ${inspect(body)}`);
 
 			const response = await request(config.serviceUrl)
 				.post('/api/validate-mark')
-				.query({asyncValidate: true})
-				.send(body)
-				.expect(HttpStatus.OK);
+				.query({async: true})
+				.send(body);
 
+			expect2xx(response);
 			expect(response.body).toBeDefined();
 
             const mc = response.body;

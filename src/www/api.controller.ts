@@ -2,14 +2,15 @@ import {
 	Body,
 	Controller,
 	Get,
+	HttpException,
 	Inject,
-	Post,
 	Param,
-	Put,
-	UseInterceptors,
-	Query,
 	ParseBoolPipe,
-	HttpException, ParseIntPipe
+	ParseIntPipe,
+	Post,
+	Put,
+	Query,
+	UseInterceptors
 } from '@nestjs/common';
 import FlattenFormatInterceptor from '../common/interceptors/flatten-format.interceptor.js';
 import httpConfig, {HttpConfig} from './http.config.js';
@@ -20,6 +21,9 @@ import TypeGuardPipe from '../common/pipes/type-guard.pipe.js';
 import {isValidateMarkParams, ValidateMarkParams} from './validate-mark-params.js';
 import {JsonTaskType} from '@pbardov/node-atol-rpc/dist/types/json-task-type.js';
 import {JsonTaskMap} from '@pbardov/node-atol-rpc/dist/types/json-task.map.js';
+import MarkingCode from '../database/entity/marking-code.js';
+import {JsonTaskParam} from '@pbardov/node-atol-rpc/dist/types/json-task.js';
+import {CloseShiftTask, OpenShiftTask} from '@pbardov/node-atol-rpc/dist/types/shift.task.js';
 
 @Controller('/api')
 @UseInterceptors(FlattenFormatInterceptor)
@@ -46,6 +50,24 @@ export default class ApiController {
 		return this.kkmSvc.withKkm(kkm => kkm.processJsonTask(task));
 	}
 
+	@Post('/open-shift')
+	async openShift(
+		@Body() params: JsonTaskParam<OpenShiftTask> = {},
+		@Query('electronically', new ParseBoolPipe({optional: true}))
+		electronically?: boolean
+	) {
+		return this.kkmSvc.withKkm(kkm => kkm.openShift({...params, electronically: electronically ?? params.electronically ?? false}));
+	}
+
+	@Post('/close-shift')
+	async closeShift(
+		@Body() params: JsonTaskParam<CloseShiftTask> = {},
+		@Query('electronically', new ParseBoolPipe({optional: true}))
+		electronically?: boolean
+	) {
+		return this.kkmSvc.withKkm(kkm => kkm.closeShift({...params, electronically: electronically ?? params.electronically ?? false}));
+	}
+
 	@Post('/receipt')
 	async openReceipt(@Body() data: Partial<FiscalTask>) {
 		return this.kkmSvc.openReceipt(data);
@@ -70,13 +92,13 @@ export default class ApiController {
 	async validateMark(
 		@Body(new TypeGuardPipe(isValidateMarkParams))
 		p: ValidateMarkParams,
-		@Query(new ParseBoolPipe({optional: true}))
+		@Query('async', new ParseBoolPipe({optional: true}))
 		asyncValidate = false,
-		@Query(new ParseIntPipe({optional: true}))
+		@Query('timeout', new ParseIntPipe({optional: true}))
 		timeout?: number
 	) {
-		const mc = await this.kkmSvc.validateMarkBegin(p.params);
-		const validation = this.kkmSvc.validateMark(mc, p.action, timeout);
+		const mc: MarkingCode = await this.kkmSvc.validateMarkBegin(p.params);
+		const validation: Promise<MarkingCode> = this.kkmSvc.validateMark(mc, p.action, timeout);
 		if (asyncValidate) {
 			return mc;
 		}

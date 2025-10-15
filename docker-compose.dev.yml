@@ -1,0 +1,37 @@
+# docker-compose.dev.yml
+# Dev override for hot-reload without rebuilding images and without mounting node_modules.
+# Use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --watch
+# Requires Docker Compose v2.22+ for `develop.watch`.
+
+services:
+  app:
+    # Собираем dev-стадию, где есть dev-зависимости (nest-cli и т.п.)
+    build:
+      context: .
+      target: builder
+
+    # Запускаем Nest в watch-режиме внутри контейнера
+    command: yarn start:dev
+
+    environment:
+      NODE_ENV: development
+      PG_URL: postgresql://kkm:kkm@db:5432/kkm
+      REDIS_URL: redis://redis:6379
+      LOG_VALIDATION_ERRORS: "true"
+      LOG_EXCEPTIONS: "true"
+
+    # Монтируем исходники и конфиги
+    volumes:
+      - ./src:/usr/src/app/src
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./tsconfig.build.json:/usr/src/app/tsconfig.build.json
+      - ./nest-cli.json:/usr/src/app/nest-cli.json
+      - ./settings.json:/usr/src/app/settings.json
+
+    # Автоматический rebuild образа только при изменении зависимостей
+    develop:
+      watch:
+        - path: ./package.json
+          action: rebuild
+        - path: ./yarn.lock
+          action: rebuild

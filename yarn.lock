@@ -51,7 +51,7 @@
   resolved "https://registry.yarnpkg.com/@babel/compat-data/-/compat-data-7.28.4.tgz#96fdf1af1b8859c8474ab39c295312bfb7c24b04"
   integrity sha512-YsmSKC29MJwf0gF8Rjjrg5LQCmyh+j/nD8/eP7f+BeoQTKYqs9RoWbjGOdy0+1Ekr68RJZMUOPVQaQisnIo4Rw==
 
-"@babel/core@^7.11.6", "@babel/core@^7.12.3", "@babel/core@^7.23.9", "@babel/core@^7.27.4":
+"@babel/core@^7.11.6", "@babel/core@^7.12.3", "@babel/core@^7.23.9", "@babel/core@^7.27.4", "@babel/core@^7.28.4":
   version "7.28.4"
   resolved "https://registry.yarnpkg.com/@babel/core/-/core-7.28.4.tgz#12a550b8794452df4c8b084f95003bce1742d496"
   integrity sha512-2BCOP7TN8M+gVDj7/ht3hsaO/B/n5oDbiAyyvnRlNOs+u1o+JWNYTQrmpuNp1/Wq2gcFrI01JAW+paEKDMx/CA==
@@ -1781,10 +1781,10 @@
   dependencies:
     "@noble/hashes" "^1.1.5"
 
-"@pbardov/node-atol-rpc@^1.0.4":
-  version "1.0.4"
-  resolved "https://npm.pkg.github.com/download/@pbardov/node-atol-rpc/1.0.4/9e11f07f88b0ccaf56ac56f10f10790ba75008ba#9e11f07f88b0ccaf56ac56f10f10790ba75008ba"
-  integrity sha512-lQBKr4gUsx0m1Jo7y2pr32CVj9FGZiW/qzTe5rSTuOyy7kwkVaKCylyWsMauEsrCjFJRUleb99W+Kl/z7ftztg==
+"@pbardov/node-atol-rpc@^1.0.6":
+  version "1.0.6"
+  resolved "https://npm.pkg.github.com/download/@pbardov/node-atol-rpc/1.0.6/c06c1b7d3d775503c3f3563fdc00059e8370c5df#c06c1b7d3d775503c3f3563fdc00059e8370c5df"
+  integrity sha512-bclH6REAET4UijCl72FmqgXCF5SeIRhPC8ALa1p07JbjcsoazaEeFtg/plMnc7IWfYdoOmVV0L8f8SkUp1h9yw==
   dependencies:
     node-atol-wrapper "^0.0.27"
 

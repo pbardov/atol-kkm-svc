@@ -5,10 +5,10 @@ import structureValidator from '../common/types/structure-validator.js';
 
 export const validateMarkFailTypes = [JsonTaskType.cancelMarkingCodeValidation, JsonTaskType.declineMarkingCode] as const;
 export type ValidateMarkFail = UnionFromArray<typeof validateMarkFailTypes>;
-export const isValidateMarkFail = isOneOf(validateMarkFailTypes);
+export const isValidateMarkFail = isOneOf(...validateMarkFailTypes);
 export const validateMarkSuccessTypes = [JsonTaskType.acceptMarkingCode, ...validateMarkFailTypes] as const;
 export type ValidateMarkSuccess = UnionFromArray<typeof validateMarkSuccessTypes>;
-export const isValidateMarkSuccess = isOneOf(validateMarkSuccessTypes);
+export const isValidateMarkSuccess = isOneOf(...validateMarkSuccessTypes);
 
 export type ValidateMarkAction = {
 	success: ValidateMarkSuccess;

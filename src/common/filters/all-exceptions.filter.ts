@@ -54,7 +54,7 @@ export default class AllExceptionsFilter implements ExceptionFilter<any> {
             errorCode,
             message,
             stack,
-            inspect: inspect(exception)
+            inspect: inspect(exception, {showHidden: true, depth: Infinity})
         };
 
         if (this.logExceptions) {

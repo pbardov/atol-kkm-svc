@@ -32,6 +32,7 @@ services:
     environment:
       PG_URL: postgresql://kkm:kkm@db:5432/kkm
       REDIS_URL: redis://redis:6379
+      LOG_VALIDATION_ERRORS: true
 
 volumes:
   db_data:

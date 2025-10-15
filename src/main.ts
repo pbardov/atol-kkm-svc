@@ -13,8 +13,14 @@ async function bootstrap() {
 	app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
 	await app.init();
 
+	process.on('SIGTERM', async () => {
+		await app.close();
+		process.exit(0);
+	});
+
 	const httpConfig: HttpConfig = app.get<HttpConfig, HttpConfig>(httpConfigFactory.KEY);
 	await app.listen(httpConfig.httpPort);
+
 	console.log(`Application is running on: ${await app.getUrl()}`);
 }
 
