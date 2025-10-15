@@ -14,7 +14,7 @@ export function makeOpt<T>(isT: TypeGuard<T> | TypeGuardDetail<T>): TypeGuardDet
 		}
 
 		if (!isT(v, error)) {
-			if (!Object.keys(error).length) {
+			if (!Object.keys(error).length && !error[errorDescription]) {
 				error[errorDescription] = getTypeGuardDetails(isT);
 			}
 		}

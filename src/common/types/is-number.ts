@@ -1,4 +1,6 @@
-import {errorDescription, ValidationErrors} from './type-guard.js';
+import {errorDescription, type ValidationErrors} from './type-guard.js';
+import {inspectOptions} from './inspect-options.js';
+import {inspect} from 'node:util';
 
 /**
  * Checks if the provided value is a number.
@@ -12,6 +14,6 @@ export default function isNumber(v: unknown, errors: ValidationErrors = {}): v i
 		return true;
 	}
 
-	errors[errorDescription] = `${v} is not number, typeof v = ${typeof v}`;
+	errors[errorDescription] = `value is not number, typeof v = ${typeof v}, v: ${inspect(v, inspectOptions)}`;
 	return false;
 }

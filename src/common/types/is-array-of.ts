@@ -1,11 +1,11 @@
 import {
-	type ArrayTypeGuardDetail, errorDescription, type TypeGuard, type TypeGuardDetail, type ValidationErrors,
+	type ArrayTypeGuardDetail, type TypeGuard, type TypeGuardDetail, type ValidationErrors,
 } from './type-guard.js';
 import describeValidationErrors from './describe-validation-errors.js';
+import isArray from './is-array.js';
 
 export default function isArrayOf<T>(values: unknown, isT: TypeGuard<T> | TypeGuardDetail<T>, errors: ValidationErrors = {}): values is T[] {
-	if (!Array.isArray(values)) {
-		errors[errorDescription] = 'Value must be of array type';
+	if (!isArray(values, errors)) {
 		return false;
 	}
 
@@ -23,6 +23,6 @@ export default function isArrayOf<T>(values: unknown, isT: TypeGuard<T> | TypeGu
 	return !errorCount;
 }
 
-export function arrayTypeGuard<T>(isT: TypeGuard<T>): ArrayTypeGuardDetail<T> {
+export function arrayTypeGuard<T>(isT: TypeGuard<T> | TypeGuardDetail<T>): ArrayTypeGuardDetail<T> {
 	return (values: unknown, errors?: ValidationErrors): values is T[] => isArrayOf<T>(values, isT, errors);
 }
