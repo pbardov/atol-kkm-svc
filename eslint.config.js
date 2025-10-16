@@ -41,6 +41,7 @@ export default tseslint.config(
 			],
 			'@typescript-eslint/no-restricted-types': 'off',
 			'@typescript-eslint/no-explicit-any': 'off',
+			'@typescript-eslint/naming-convention': 'off',
 			'no-negated-condition': 'off',
 			'new-cap': 'off',
 			'no-await-in-loop': 'off',

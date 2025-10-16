@@ -1,5 +1,5 @@
+/* eslint-disable */
 import request, {type Response} from 'supertest';
-import {HttpStatus} from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 // @ts-ignore
@@ -24,7 +24,6 @@ function loadData(filePath: string): any {
 
 function expect2xx(res: Response) {
 	if (res.status < 200 || res.status >= 300) {
-		// eslint-disable-next-line no-console
 		console.error('HTTP error:', res.status, res.body ?? res.text);
 	}
 	expect(res.status).toBeGreaterThanOrEqual(200);

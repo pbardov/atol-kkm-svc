@@ -3,7 +3,11 @@ FROM node:20 AS builder
 WORKDIR /usr/src/app
 
 # установить git и ssh-клиент
-RUN apt-get update && apt-get install -y git openssh-client curl wget build-essential
+RUN apt-get update && \
+    apt-get install -y git openssh-client curl wget build-essential postgresql-common
+
+RUN /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+RUN apt-get install -y postgresql-client-18 postgresql-client-common
 
 # скопировать папку fptr10 с deb-пакетами
 COPY ./fptr10 ./fptr10

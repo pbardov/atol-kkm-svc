@@ -1,6 +1,8 @@
 # docker-compose.dev.yml
 # Dev override for hot-reload without rebuilding images and without mounting node_modules.
+# Build: docker compose -f docker-compose.yml -f docker-compose.dev.yml build
 # Use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --watch
+# Run migration: docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm --build migrate
 # Requires Docker Compose v2.22+ for `develop.watch`.
 
 services:
@@ -35,3 +37,19 @@ services:
           action: rebuild
         - path: ./yarn.lock
           action: rebuild
+
+  migrate:
+    build:
+      context: .
+      target: builder
+    command: >
+      bash -lc 'until pg_isready -h db -p 5432 -q; do
+        echo "waiting for postgres on db:5432...";
+        sleep 1;
+      done;
+      yarn migration:run'
+    environment:
+      NODE_ENV: development
+      PG_URL: postgresql://kkm:kkm@db:5432/kkm
+    depends_on:
+      - db

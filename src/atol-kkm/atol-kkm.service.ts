@@ -45,11 +45,11 @@ export default class AtolKkmService {
 		this.logger.log('Загружена конфигурация:', kkmSettings);
 
 		if (receiptTpl) {
-			this.receiptTpl = loadSettingsFile(receiptTpl);
+			this.receiptTpl = loadSettingsFile(receiptTpl)!;
 		}
 
 		if (receiptItemTpl) {
-			this.receiptItemTpl = loadSettingsFile(receiptItemTpl);
+			this.receiptItemTpl = loadSettingsFile(receiptItemTpl)!;
 		}
 
 		this.redisClient = new Redis(redisUrl);
@@ -146,8 +146,9 @@ export default class AtolKkmService {
 
 			this.logger.log(`Begin marking code validation ${mcId64}`);
 			return await this.withKkm(async kkm => {
-				await kkm.beginMarkingCodeValidation({params: mc.params});
 				try {
+					await kkm.beginMarkingCodeValidation({params: mc.params});
+
 					let validationResult: GetMarkingCodeValidationStatusTaskResult;
 					do {
 						validationResult = await kkm.getMarkingCodeValidationStatus();

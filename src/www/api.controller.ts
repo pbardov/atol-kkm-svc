@@ -3,7 +3,7 @@ import {
 	Controller,
 	Get,
 	HttpException,
-	Inject,
+	Inject, Logger,
 	Param,
 	ParseBoolPipe,
 	ParseIntPipe,
@@ -28,6 +28,8 @@ import {CloseShiftTask, OpenShiftTask} from '@pbardov/node-atol-rpc/dist/types/s
 @Controller('/api')
 @UseInterceptors(FlattenFormatInterceptor)
 export default class ApiController {
+	protected readonly logger = new Logger(ApiController.name);
+
 	constructor(
 		public readonly kkmSvc: AtolKkmService,
 		@Inject(httpConfig.KEY) private readonly config: HttpConfig
@@ -46,7 +48,11 @@ export default class ApiController {
 	}
 
 	@Post('/')
-	async kkm<T extends JsonTaskType>(@Body() task: JsonTaskMap[T]) {
+	async kkm<T extends JsonTaskType, P extends JsonTaskMap[T] = JsonTaskMap[T]>(
+		@Body() params: JsonTaskParam<P> | P,
+		@Query('type') taskType?: T
+	) {
+		const task = (taskType ? {...params, type: taskType} : params) as P;
 		return this.kkmSvc.withKkm(kkm => kkm.processJsonTask(task));
 	}
 
@@ -100,6 +106,11 @@ export default class ApiController {
 		const mc: MarkingCode = await this.kkmSvc.validateMarkBegin(p.params);
 		const validation: Promise<MarkingCode> = this.kkmSvc.validateMark(mc, p.action, timeout);
 		if (asyncValidate) {
+			// handle validation exceptions
+			validation.catch(e => {
+				this.logger.error(`Marking code validation ${mc.id.toString('base64')} fail`, e);
+			});
+
 			return mc;
 		}
 

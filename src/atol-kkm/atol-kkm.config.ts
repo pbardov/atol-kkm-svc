@@ -21,12 +21,12 @@ export class AtolKkmConfig {
 	@IsNumber()
 	@Type(() => Number)
 	@Expose({name: 'MARKING_CODE_CHECK_INTERVAL'})
-	markingCodeCheckInterval = 200;
+	markingCodeCheckInterval = 500;
 
 	@IsNumber()
 	@Type(() => Number)
 	@Expose({name: 'MARKING_CODE_CHECK_TIMEOUT'})
-	markingCodeCheckTimeout = 5000;
+	markingCodeCheckTimeout = 60000;
 
 	@IsString()
 	@Type(() => String)
