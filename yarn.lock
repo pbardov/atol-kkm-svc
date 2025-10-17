@@ -1781,10 +1781,10 @@
   dependencies:
     "@noble/hashes" "^1.1.5"
 
-"@pbardov/node-atol-rpc@^1.0.9":
-  version "1.0.9"
-  resolved "https://npm.pkg.github.com/download/@pbardov/node-atol-rpc/1.0.9/8fd7068571fe6fa83fe9b681c7e27df71f4104cf#8fd7068571fe6fa83fe9b681c7e27df71f4104cf"
-  integrity sha512-16E93ROlnx8sFi+gJynlGQVNV1TDCOWoiNbQm8H9EtKMT5pxC60tdGbFi+oT8NK0QOD3x3+2xAMHDK90YiOmHQ==
+"@pbardov/node-atol-rpc@^1.0.10":
+  version "1.0.10"
+  resolved "https://npm.pkg.github.com/download/@pbardov/node-atol-rpc/1.0.10/2eec2e9b0dcceeffe8241e0ce02df1d4f94a58d7#2eec2e9b0dcceeffe8241e0ce02df1d4f94a58d7"
+  integrity sha512-nbC/aI2MZt59nynxWaVMN7sbLcC27PcUPIAW1pao4cO0BbU7LBffyOKNGjHuXKj9hKhrsqB8vYwNhXD/hUegQg==
   dependencies:
     node-atol-wrapper "^0.0.27"
 

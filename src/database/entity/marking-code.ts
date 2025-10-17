@@ -3,13 +3,15 @@ import {ImcParamsValidation, ImcType} from '@pbardov/node-atol-rpc/dist/types/im
 import {
 	GetMarkingCodeValidationStatusTaskResult
 } from '@pbardov/node-atol-rpc/dist/types/get-marking-code-validation-status.task-result.js';
+import {HexTransformer} from '../util/hex-transformer.js';
 
 @Entity('marking_code')
 export default class MarkingCode {
 	@PrimaryColumn({
 		type: 'bytea',
+		transformer: new HexTransformer()
 	})
-	id: Buffer; // sha256 hash of imc field
+	id: string; // sha256 hash of imc field
 
 	@Column({type: 'text'})
 	imc: string;

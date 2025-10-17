@@ -108,7 +108,7 @@ export default class ApiController {
 		if (asyncValidate) {
 			// handle validation exceptions
 			validation.catch(e => {
-				this.logger.error(`Marking code validation ${mc.id.toString('base64')} fail`, e);
+				this.logger.error(`Marking code validation ${mc.id} fail`, e);
 			});
 
 			return mc;

@@ -1,4 +1,4 @@
-import {IsIn, IsString, IsUrl} from 'class-validator';
+import {IsBoolean, IsIn, IsString, IsUrl} from 'class-validator';
 import {Expose, Type} from 'class-transformer';
 import registerClassAs, {configFactory} from '../src/common/config/register-class-as.js';
 import {ValidateMarkFail, validateMarkFailTypes} from '../src/atol-kkm/validate-mark-action.js';
@@ -10,10 +10,20 @@ export class TestConfig {
 	@Expose({name:'SERVICE_URL'})
 	serviceUrl = 'http://localhost:8080'
 
+	@IsBoolean()
+	@Type(() => Boolean)
+	@Expose({name: 'TEST_API_METHODS'})
+	testApiMethods: boolean = true;
+
 	@IsString()
 	@Type(() => String)
 	@Expose({name: 'RECEIPT_DATA_PATH'})
 	receiptDataPath: string = 'test.receipts.yml';
+
+	@IsBoolean()
+	@Type(() => Boolean)
+	@Expose({name: 'VALIDATE_MARK_VERBOSE'})
+	validateMarkVerbose: boolean = false;
 
 	@IsString()
 	@Type(() => String)

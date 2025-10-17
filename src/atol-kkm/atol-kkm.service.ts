@@ -123,7 +123,7 @@ export default class AtolKkmService {
 		const repo = this.markingCodeRepository;
 		const mcId = repo.calcId(imcParam.imc);
 		const mc = repo.create({
-			id: mcId,
+			id: mcId.toString('hex'),
 			imc: imcParam.imc,
 			imcType: imcParam.imcType,
 			params: imcParam,
@@ -140,11 +140,10 @@ export default class AtolKkmService {
 		await mutex.acquire();
 		try {
 			const repo = this.markingCodeRepository;
-			const mcId64 = mc.id.toString('base64');
 
 			const duration = (d = new Date()) => d.getTime() - mc.validationStarted.getTime();
 
-			this.logger.log(`Begin marking code validation ${mcId64}`);
+			this.logger.log(`Begin marking code validation ${mc.id}`);
 			return await this.withKkm(async kkm => {
 				try {
 					await kkm.beginMarkingCodeValidation({params: mc.params});
@@ -159,7 +158,7 @@ export default class AtolKkmService {
 
 						if (!validationResult.ready) {
 							if (duration() > timeout) {
-								throw new Error(`Marking code validation ${mcId64} timeout`);
+								throw new Error(`Marking code validation ${mc.id} timeout`);
 							}
 
 							await repo.upsert(mc, ['id']);
@@ -170,7 +169,7 @@ export default class AtolKkmService {
 					} while (!validationResult.ready);
 
 					if (!mc.isReady || !mc.isValid) {
-						throw new Error(`Marking code validation ${mcId64} fail`);
+						throw new Error(`Marking code validation ${mc.id} fail`);
 					}
 				} finally {
 					const actionTask = mc.isReady && mc.isValid ? action.success : action.fail;
@@ -181,7 +180,7 @@ export default class AtolKkmService {
 					await repo.upsert(mc, ['id']);
 					this.emitter?.emit('validateMark.complete', mc);
 
-					this.logger.log(`Marking code validation ${mcId64} complete ${
+					this.logger.log(`Marking code validation ${mc.id} complete ${
 						JSON.stringify({isReady: mc.isValid, isValid: mc.isValid, actionTask, duration: duration(mc.validationCompleted)})
 					}\n${JSON.stringify(mc.validationResult, null, '  ')}`);
 				}
@@ -193,8 +192,8 @@ export default class AtolKkmService {
 		}
 	}
 
-	async validateMarkStatus(id: Buffer | string) {
-		return this.markingCodeRepository.findOneBy({id: Buffer.isBuffer(id) ? id : Buffer.from(id, 'base64')});
+	async validateMarkStatus(id: string) {
+		return this.markingCodeRepository.findOneBy({id});
 	}
 
 	async withKkm<R>(callback: (kkm: AtolRpc) => R | Promise<R>): Promise<R> {
