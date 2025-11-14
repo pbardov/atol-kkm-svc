@@ -11,6 +11,10 @@ services:
     build:
       context: .
       target: builder
+      args:
+        APT_PROXY: ${APT_PROXY}
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
 
     # Запускаем Nest в watch-режиме внутри контейнера
     command: yarn start:dev
@@ -42,6 +46,10 @@ services:
     build:
       context: .
       target: builder
+      args:
+        APT_PROXY: ${APT_PROXY}
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
     command: >
       bash -lc 'until pg_isready -h db -p 5432 -q; do
         echo "waiting for postgres on db:5432...";

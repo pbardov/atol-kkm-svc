@@ -16,6 +16,7 @@ import {
 import MarkingCodeRepository from './marking-code.repository.js';
 import {ValidateMarkAction} from './validate-mark-action.js';
 import MarkingCode from '../database/entity/marking-code.js';
+import {inspect} from 'node:util';
 
 @Injectable()
 export default class AtolKkmService {
@@ -60,8 +61,8 @@ export default class AtolKkmService {
 		});
 	}
 
-	async openReceipt(data: Partial<FiscalTask>) {
-		const payload = {...this.receiptTpl, ...data};
+	async openReceipt(data?: Partial<FiscalTask>) {
+		const payload = {...this.receiptTpl, ...(data ?? {})};
 		if (!isFiscalTask(payload)) {
 			throw new Error('Неверные данные чека', {cause: payload});
 		}
@@ -81,7 +82,7 @@ export default class AtolKkmService {
 		return receipt;
 	}
 
-	async fiscalizeReceipt(receiptId: string) {
+	async fiscalizeReceipt(receiptId: string, data?: Partial<FiscalTask>) {
 		return await this.receiptRepository.manager.transaction(async transactionalEntityManager => {
 			const receipt = await transactionalEntityManager.findOneBy(this.receiptRepository.target, {id: receiptId});
 			if (!receipt) {
@@ -89,9 +90,17 @@ export default class AtolKkmService {
 			}
 
 			if (!receipt.result) {
-				receipt.result = await this.withKkm(async (kkm) => {
-					return kkm[receipt.type](receipt.payload);
-				});
+				receipt.payload = {...receipt.payload, ...(data ?? {})};
+				try {
+					receipt.result = await this.withKkm(async (kkm) => {
+						return kkm[receipt.type](receipt.payload);
+					});
+				} catch (e) {
+					receipt.error = e;
+					this.logger.error(`Ошибка фискализации чека: ${inspect(e)}`);
+				}
+
+				receipt.fiscalizedAt = new Date();
 				await transactionalEntityManager.save(receipt);
 			}
 

@@ -16,8 +16,14 @@ export default class Receipt {
 	@Column('timestamp', {name: 'created_at', default: () => 'CURRENT_TIMESTAMP'})
 	createdAt: Date;
 
+	@Column('timestamp', {name: 'fiscalized_at', nullable: true})
+	fiscalizedAt: Date | null = null;
+
 	@Column('jsonb', {name: 'result', nullable: true})
 	result: FiscalTaskResult | null = null;
+
+	@Column('jsonb', {name: 'error', nullable: true})
+	error: any = null;
 
 	@Column('jsonb', {name: 'payload'})
 	payload: FiscalTask;

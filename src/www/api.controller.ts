@@ -49,10 +49,10 @@ export default class ApiController {
 
 	@Post('/')
 	async kkm<T extends JsonTaskType, P extends JsonTaskMap[T] = JsonTaskMap[T]>(
-		@Body() params: JsonTaskParam<P> | P,
+		@Body() params?: JsonTaskParam<P> | P,
 		@Query('type') taskType?: T
 	) {
-		const task = (taskType ? {...params, type: taskType} : params) as P;
+		const task = (taskType ? {...(params ?? {}), type: taskType} : params ?? {}) as P;
 		return this.kkmSvc.withKkm(kkm => kkm.processJsonTask(task));
 	}
 
@@ -75,7 +75,7 @@ export default class ApiController {
 	}
 
 	@Post('/receipt')
-	async openReceipt(@Body() data: Partial<FiscalTask>) {
+	async openReceipt(@Body() data?: Partial<FiscalTask>) {
 		return this.kkmSvc.openReceipt(data);
 	}
 
@@ -85,8 +85,8 @@ export default class ApiController {
 	}
 
 	@Put('/receipt/:id')
-	async fiscalizeReceipt(@Param('id') id: string) {
-		return this.kkmSvc.fiscalizeReceipt(id);
+	async fiscalizeReceipt(@Param('id') id: string, @Body() data?: Partial<FiscalTask>) {
+		return this.kkmSvc.fiscalizeReceipt(id, data);
 	}
 
 	@Post('/receipt/:id/item')

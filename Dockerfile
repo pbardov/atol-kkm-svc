@@ -2,12 +2,19 @@
 FROM node:20 AS builder
 WORKDIR /usr/src/app
 
+ARG APT_PROXY
+RUN if [ -n "$APT_PROXY" ]; then \
+      printf 'Acquire::http::Proxy "%s";\nAcquire::https::Proxy "%s";\n' "$APT_PROXY" "$APT_PROXY" \
+      > /etc/apt/apt.conf.d/01proxy ; \
+    fi
+
 # установить git и ssh-клиент
 RUN apt-get update && \
     apt-get install -y git openssh-client curl wget build-essential postgresql-common
 
 RUN /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-RUN apt-get install -y postgresql-client-18 postgresql-client-common
+RUN apt-get update && \
+    apt-get install -y postgresql-client-18 postgresql-client-common
 
 # скопировать папку fptr10 с deb-пакетами
 COPY ./fptr10 ./fptr10
@@ -30,6 +37,12 @@ RUN yarn build
 # stage 2: runtime
 FROM node:20 AS runtime
 WORKDIR /usr/src/app
+
+ARG APT_PROXY
+RUN if [ -n "$APT_PROXY" ]; then \
+      printf 'Acquire::http::Proxy "%s";\nAcquire::https::Proxy "%s";\n' "$APT_PROXY" "$APT_PROXY" \
+      > /etc/apt/apt.conf.d/01proxy ; \
+    fi
 
 # установка необходимых зависимостей
 RUN apt-get update && apt-get install -y build-essential
